@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThaiRung Lucky Draw</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap');
+
+    :root{
+      --navy:#082443;
+      --navy2:#0f3a69;
+      --red:#d7193f;
+      --red2:#ff4d6b;
+      --gold:#f3c969;
+      --bg:#eef3f9;
+      --card:#ffffff;
+      --text:#12263f;
+      --muted:#6d7c91;
+      --line:#dfe7f0;
+      --green:#0c9b6d;
+      --shadow:0 20px 60px rgba(8,36,67,.14);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Prompt",Tahoma,sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(215,25,63,.12), transparent 25%),
+        radial-gradient(circle at 90% 10%, rgba(15,58,105,.14), transparent 28%),
+        linear-gradient(135deg,#f8fafc,#e9f0f7);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    button,input{font:inherit}
+    button{cursor:pointer}
+
+    .app{
+      width:min(1500px,96vw);
+      margin:20px auto;
+      min-height:calc(100vh - 40px);
+      background:#fff;
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns:340px 1fr;
+      border:1px solid rgba(8,36,67,.06);
+    }
+
+    .sidebar{
+      background:linear-gradient(160deg,var(--navy),var(--navy2));
+      color:#fff;
+      padding:26px;
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+    }
+
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      padding-bottom:20px;
+    }
+
+    .logo{
+      width:58px;height:58px;border-radius:18px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--red),var(--red2));
+      font-size:24px;font-weight:800;
+      box-shadow:0 14px 30px rgba(215,25,63,.35);
+    }
+
+    .brand h1{margin:0;font-size:22px}
+    .brand p{margin:3px 0 0;font-size:12px;color:#b9c8da}
+
+    .upload-box{
+      border:1px dashed rgba(255,255,255,.3);
+      background:rgba(255,255,255,.07);
+      border-radius:20px;
+      padding:18px;
+    }
+
+    .upload-box h3{margin:0 0 8px;font-size:15px}
+    .upload-box p{margin:0 0 14px;font-size:12px;color:#c6d3e2;line-height:1.6}
+
+    .file-label{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:46px;
+      border-radius:14px;
+      background:#fff;
+      color:var(--navy);
+      font-weight:600;
+      cursor:pointer;
+    }
+    .file-label input{display:none}
+
+    .stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .stat{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.1);
+    }
+    .stat span{display:block;font-size:11px;color:#b9c8da}
+    .stat b{display:block;font-size:24px;margin-top:4px}
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .nav button{
+      border:none;
+      border-radius:16px;
+      padding:14px 15px;
+      text-align:left;
+      color:#d9e5f2;
+      background:rgba(255,255,255,.06);
+      transition:.2s;
+    }
+
+    .nav button.active{
+      background:#fff;
+      color:var(--navy);
+      box-shadow:0 10px 26px rgba(0,0,0,.14);
+    }
+
+    .nav small{display:block;color:inherit;opacity:.72;margin-top:3px}
+
+    .side-actions{
+      margin-top:auto;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .side-actions button{
+      border:none;
+      border-radius:14px;
+      padding:12px 10px;
+      font-weight:600;
+    }
+    .btn-export{background:#fff;color:var(--navy)}
+    .btn-reset{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)!important}
+
+    .main{
+      padding:30px;
+      background:
+        linear-gradient(rgba(255,255,255,.94),rgba(255,255,255,.94)),
+        repeating-linear-gradient(90deg,transparent 0 79px,rgba(8,36,67,.025) 80px);
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      margin-bottom:22px;
+    }
+
+    .topbar h2{margin:0;font-size:28px;color:var(--navy)}
+    .status-pill{
+      border-radius:999px;
+      padding:9px 14px;
+      background:#eef7f4;
+      color:var(--green);
+      font-size:12px;
+      font-weight:600;
+      border:1px solid #d7eee6;
+    }
+
+    .draw-card{
+      min-height:480px;
+      border-radius:28px;
+      background:
+        radial-gradient(circle at 50% 30%,rgba(65,131,205,.35),transparent 32%),
+        linear-gradient(145deg,#071d38,#0c315e 62%,#09264b);
+      color:white;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:36px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 20px 50px rgba(8,36,67,.24);
+    }
+
+    .draw-card::before{
+      content:"";
+      position:absolute;
+      width:650px;height:650px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 0 0 55px rgba(255,255,255,.025),0 0 0 110px rgba(255,255,255,.018);
+    }
+
+    .draw-content{
+      position:relative;
+      z-index:2;
+      width:min(900px,100%);
+    }
+
+    .page-label{
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:#c4d6ea;
+      font-size:13px;
+      margin-bottom:10px;
+    }
+
+    .prize-title{
+      font-size:clamp(30px,4vw,52px);
+      font-weight:800;
+      margin:0 0 8px;
+    }
+
+    .prize-count{
+      color:var(--gold);
+      margin-bottom:24px;
+      font-size:16px;
+    }
+
+    .winner-box{
+      min-height:170px;
+      display:grid;
+      place-items:center;
+      margin:0 auto 24px;
+    }
+
+    .placeholder{
+      color:#afc0d4;
+      font-size:18px;
+    }
+
+    .winner-grid{
+      display:grid;
+      gap:12px;
+      width:100%;
+    }
+
+    .winner-grid.five{grid-template-columns:repeat(5,1fr)}
+    .winner-grid.three{grid-template-columns:repeat(3,1fr)}
+    .winner-grid.one{grid-template-columns:minmax(280px,520px);justify-content:center}
+
+    .winner{
+      padding:18px 10px;
+      border-radius:18px;
+      background:rgba(255,255,255,.11);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 10px 28px rgba(0,0,0,.16);
+      font-size:clamp(16px,2vw,24px);
+      font-weight:700;
+      animation:pop .45s ease both;
+      word-break:break-word;
+    }
+
+    @keyframes pop{
+      from{transform:scale(.72);opacity:0}
+      to{transform:scale(1);opacity:1}
+    }
+
+    .draw-btn{
+      border:none;
+      border-radius:18px;
+      padding:17px 34px;
+      min-width:250px;
+      color:#fff;
+      font-size:18px;
+      font-weight:700;
+      background:linear-gradient(135deg,var(--red),var(--red2));
+      box-shadow:0 16px 34px rgba(215,25,63,.38);
+    }
+
+    .draw-btn:disabled{opacity:.45;cursor:not-allowed}
+
+    .info{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:18px;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      background:#fff;
+    }
+
+    .panel h3{margin:0 0 12px;font-size:16px;color:var(--navy)}
+
+    .history{
+      max-height:210px;
+      overflow:auto;
+    }
+
+    .history-item{
+      display:grid;
+      grid-template-columns:80px 1fr 150px;
+      gap:12px;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid #edf1f5;
+      font-size:13px;
+    }
+
+    .history-item:last-child{border-bottom:none}
+    .history-item .no{color:var(--muted)}
+    .history-item .name{font-weight:600}
+    .history-item .prize{color:var(--red);text-align:right}
+
+    .remaining{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .progress{
+      height:12px;border-radius:999px;background:#edf2f7;overflow:hidden;
+    }
+
+    .progress > div{
+      height:100%;
+      background:linear-gradient(90deg,var(--navy2),var(--red));
+      width:0%;
+      transition:.3s;
+    }
+
+    .remaining strong{font-size:34px;color:var(--navy)}
+    .remaining p{margin:0;color:var(--muted);font-size:13px}
+
+    .toast{
+      position:fixed;
+      right:24px;
+      bottom:24px;
+      background:#12263f;
+      color:white;
+      padding:13px 16px;
+      border-radius:14px;
+      box-shadow:0 12px 30px rgba(0,0,0,.22);
+      opacity:0;
+      transform:translateY(14px);
+      pointer-events:none;
+      transition:.25s;
+      z-index:99;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    .confetti{
+      position:fixed;
+      top:-20px;
+      width:10px;height:18px;
+      z-index:90;
+      animation:fall linear forwards;
+    }
+    @keyframes fall{
+      to{transform:translateY(110vh) rotate(720deg);opacity:.9}
+    }
+
+    @media(max-width:1000px){
+      .app{grid-template-columns:1fr}
+      .sidebar{padding:20px}
+      .nav{display:grid;grid-template-columns:repeat(3,1fr)}
+      .side-actions{margin-top:0}
+      .winner-grid.five{grid-template-columns:repeat(2,1fr)}
+      .info{grid-template-columns:1fr}
+    }
+
+    @media(max-width:650px){
+      .main{padding:18px}
+      .topbar h2{font-size:22px}
+      .draw-card{padding:24px 16px;min-height:440px}
+      .winner-grid.five,.winner-grid.three{grid-template-columns:1fr}
+      .history-item{grid-template-columns:55px 1fr}
+      .history-item .prize{grid-column:2;text-align:left}
+      .nav{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">TR</div>
+      <div>
+        <h1>ThaiRung Lucky Draw</h1>
+        <p>ระบบสุ่มรางวัลและตัดรายชื่ออัตโนมัติ</p>
+      </div>
+    </div>
+
+    <div class="upload-box">
+      <h3>อัปโหลดรายชื่อ</h3>
+      <p>รองรับไฟล์ Excel, CSV และ TXT โดยระบบจะอ่านรายชื่อจากคอลัมน์แรก</p>
+      <label class="file-label">
+        เลือกไฟล์รายชื่อ
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.txt" />
+      </label>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>รายชื่อทั้งหมด</span><b id="totalCount">0</b></div>
+      <div class="stat"><span>รายชื่อคงเหลือ</span><b id="remainCount">0</b></div>
+    </div>
+
+    <div class="nav">
+      <button class="active" data-page="0">
+        หน้า 1 · Set ThaiRung
+        <small>สุ่มครั้งละ 5 รายชื่อ</small>
+      </button>
+      <button data-page="1">
+        หน้า 2 · หมวก ThaiRung
+        <small>สุ่มครั้งละ 3 รายชื่อ</small>
+      </button>
+      <button data-page="2">
+        หน้า 3 · กระเป๋าผ้า
+        <small>สุ่มครั้งละ 1 รายชื่อ</small>
+      </button>
+    </div>
+
+    <div class="side-actions">
+      <button class="btn-export" id="exportBtn">ส่งออกผลรางวัล</button>
+      <button class="btn-reset" id="resetBtn">เริ่มใหม่ทั้งหมด</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h2 id="topTitle">Set ThaiRung</h2>
+      <div class="status-pill" id="statusText">กรุณาอัปโหลดรายชื่อ</div>
+    </div>
+
+    <section class="draw-card">
+      <div class="draw-content">
+        <div class="page-label" id="pageLabel">PRIZE 01</div>
+        <h1 class="prize-title" id="prizeTitle">Set ThaiRung</h1>
+        <div class="prize-count" id="prizeCount">จำนวน 5 รางวัล</div>
+
+        <div class="winner-box" id="winnerBox">
+          <div class="placeholder">รายชื่อผู้โชคดีจะแสดงที่นี่</div>
+        </div>
+
+        <button class="draw-btn" id="drawBtn" disabled>สุ่มผู้โชคดี 5 รายชื่อ</button>
+      </div>
+    </section>
+
+    <section class="info">
+      <div class="panel">
+        <h3>ประวัติผู้ได้รับรางวัล</h3>
+        <div class="history" id="history">
+          <div class="placeholder" style="font-size:13px;color:#7a899c">ยังไม่มีผลการสุ่ม</div>
+        </div>
+      </div>
+
+      <div class="panel remaining">
+        <h3>สถานะรายชื่อ</h3>
+        <strong id="remainBig">0</strong>
+        <p>รายชื่อที่ยังมีสิทธิ์ลุ้นรางวัล</p>
+        <div class="progress"><div id="progressBar"></div></div>
+        <p id="winnerSummary">ได้รับรางวัลแล้ว 0 รายชื่อ</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const pages = [
+    {title:'Set ThaiRung', count:5, label:'PRIZE 01'},
+    {title:'หมวก ThaiRung', count:3, label:'PRIZE 02'},
+    {title:'กระเป๋าผ้า', count:1, label:'PRIZE 03'}
+  ];
+
+  let allNames = [];
+  let remainingNames = [];
+  let winners = [];
+  let currentPage = 0;
+
+  const $ = id => document.getElementById(id);
+
+  function normalizeNames(values){
+    const seen = new Set();
+    return values
+      .map(v => String(v ?? '').trim())
+      .filter(v => v && !/^ชื่อ|name$/i.test(v))
+      .filter(v => {
+        const key = v.toLowerCase();
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  async function readFile(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if(ext === 'txt' || ext === 'csv'){
+      const text = await file.text();
+      if(ext === 'txt'){
+        return normalizeNames(text.split(/\r?\n/));
+      }
+      const wb = XLSX.read(text,{type:'string'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      return normalizeNames(rows.map(r => r[0]));
+    }
+
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data,{type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    return normalizeNames(rows.map(r => r[0]));
+  }
+
+  $('fileInput').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    try{
+      const names = await readFile(file);
+      if(!names.length) throw new Error('ไม่พบรายชื่อในคอลัมน์แรก');
+
+      allNames = names;
+      remainingNames = [...names];
+      winners = [];
+      localStorage.removeItem('thairungLuckyDraw');
+      saveState();
+      renderAll();
+      showToast(`นำเข้ารายชื่อสำเร็จ ${names.length} รายชื่อ`);
+    }catch(err){
+      showToast(err.message || 'ไม่สามารถอ่านไฟล์ได้');
+    }
+  });
+
+  function randomPick(count){
+    if(remainingNames.length < count){
+      showToast(`รายชื่อคงเหลือไม่พอสำหรับสุ่ม ${count} รายชื่อ`);
+      return [];
+    }
+
+    const pool = [...remainingNames];
+    const result = [];
+    for(let i=0;i<count;i++){
+      const index = Math.floor(Math.random()*pool.length);
+      result.push(pool.splice(index,1)[0]);
+    }
+    return result;
+  }
+
+  function draw(){
+    const page = pages[currentPage];
+    const picked = randomPick(page.count);
+    if(!picked.length) return;
+
+    picked.forEach(name => {
+      const idx = remainingNames.indexOf(name);
+      if(idx >= 0) remainingNames.splice(idx,1);
+      winners.push({
+        name,
+        prize:page.title,
+        page:currentPage+1,
+        time:new Date().toLocaleString('th-TH')
+      });
+    });
+
+    showWinners(picked);
+    launchConfetti();
+    saveState();
+    renderStats();
+    renderHistory();
+    updateButton();
+  }
+
+  function showWinners(names){
+    const box = $('winnerBox');
+    const cls = names.length===5?'five':names.length===3?'three':'one';
+    box.innerHTML = `<div class="winner-grid ${cls}">` +
+      names.map((n,i)=>`<div class="winner" style="animation-delay:${i*.08}s">${escapeHtml(n)}</div>`).join('') +
+      `</div>`;
+  }
+
+  function renderPage(){
+    const p = pages[currentPage];
+    $('topTitle').textContent = p.title;
+    $('pageLabel').textContent = p.label;
+    $('prizeTitle').textContent = p.title;
+    $('prizeCount').textContent = `จำนวน ${p.count} รางวัล`;
+    $('drawBtn').textContent = `สุ่มผู้โชคดี ${p.count} รายชื่อ`;
+    $('winnerBox').innerHTML = `<div class="placeholder">รายชื่อผู้โชคดีจะแสดงที่นี่</div>`;
+
+    document.querySelectorAll('.nav button').forEach((btn,i)=>{
+      btn.classList.toggle('active',i===currentPage);
+    });
+
+    updateButton();
+  }
+
+  function renderStats(){
+    $('totalCount').textContent = allNames.length;
+    $('remainCount').textContent = remainingNames.length;
+    $('remainBig').textContent = remainingNames.length;
+    $('winnerSummary').textContent = `ได้รับรางวัลแล้ว ${winners.length} รายชื่อ`;
+
+    const used = allNames.length ? (winners.length/allNames.length)*100 : 0;
+    $('progressBar').style.width = `${Math.min(100,used)}%`;
+
+    if(!allNames.length){
+      $('statusText').textContent = 'กรุณาอัปโหลดรายชื่อ';
+    }else{
+      $('statusText').textContent = `พร้อมสุ่ม · คงเหลือ ${remainingNames.length} รายชื่อ`;
+    }
+  }
+
+  function renderHistory(){
+    const el = $('history');
+    if(!winners.length){
+      el.innerHTML = `<div class="placeholder" style="font-size:13px;color:#7a899c">ยังไม่มีผลการสุ่ม</div>`;
+      return;
+    }
+
+    el.innerHTML = winners.slice().reverse().map((w,i)=>`
+      <div class="history-item">
+        <div class="no">#${winners.length-i}</div>
+        <div class="name">${escapeHtml(w.name)}</div>
+        <div class="prize">${escapeHtml(w.prize)}</div>
+      </div>
+    `).join('');
+  }
+
+  function updateButton(){
+    const count = pages[currentPage].count;
+    $('drawBtn').disabled = remainingNames.length < count || allNames.length === 0;
+  }
+
+  function renderAll(){
+    renderPage();
+    renderStats();
+    renderHistory();
+  }
+
+  function saveState(){
+    localStorage.setItem('thairungLuckyDraw', JSON.stringify({
+      allNames, remainingNames, winners, currentPage
+    }));
+  }
+
+  function loadState(){
+    try{
+      const data = JSON.parse(localStorage.getItem('thairungLuckyDraw'));
+      if(!data) return;
+      allNames = Array.isArray(data.allNames)?data.allNames:[];
+      remainingNames = Array.isArray(data.remainingNames)?data.remainingNames:[];
+      winners = Array.isArray(data.winners)?data.winners:[];
+      currentPage = Number.isInteger(data.currentPage)?data.currentPage:0;
+    }catch(e){}
+  }
+
+  function exportResults(){
+    if(!winners.length){
+      showToast('ยังไม่มีผลรางวัลให้ส่งออก');
+      return;
+    }
+
+    const rows = winners.map((w,i)=>({
+      ลำดับ:i+1,
+      ชื่อผู้ได้รับรางวัล:w.name,
+      รางวัล:w.prize,
+      หน้า:w.page,
+      วันเวลา:w.time
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'ผลรางวัล');
+    XLSX.writeFile(wb,'ThaiRung_Lucky_Draw_Results.xlsx');
+  }
+
+  function resetAll(){
+    if(!confirm('ต้องการล้างผลรางวัลและเริ่มสุ่มใหม่ทั้งหมดใช่หรือไม่?')) return;
+    remainingNames = [...allNames];
+    winners = [];
+    saveState();
+    renderAll();
+    showToast('เริ่มใหม่เรียบร้อยแล้ว');
+  }
+
+  function launchConfetti(){
+    const colors=['#d7193f','#f3c969','#ffffff','#4da3ff','#26c281'];
+    for(let i=0;i<90;i++){
+      const c=document.createElement('div');
+      c.className='confetti';
+      c.style.left=Math.random()*100+'vw';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration=(2.4+Math.random()*2.2)+'s';
+      c.style.animationDelay=(Math.random()*.5)+'s';
+      c.style.transform=`rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(),5200);
+    }
+  }
+
+  function showToast(msg){
+    const t=$('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    clearTimeout(window.toastTimer);
+    window.toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,m=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+
+  document.querySelectorAll('.nav button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      currentPage=Number(btn.dataset.page);
+      saveState();
+      renderPage();
+    });
+  });
+
+  $('drawBtn').addEventListener('click',draw);
+  $('exportBtn').addEventListener('click',exportResults);
+  $('resetBtn').addEventListener('click',resetAll);
+
+  loadState();
+  renderAll();
+</script>
+</body>
+</html>
