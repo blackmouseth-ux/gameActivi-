@@ -376,7 +376,7 @@
     @media(max-width:1000px){
       .app{grid-template-columns:1fr}
       .sidebar{padding:20px}
-      .nav{display:grid;grid-template-columns:repeat(3,1fr)}
+      .nav{display:grid;grid-template-columns:repeat(4,1fr)}
       .side-actions{margin-top:0}
       .winner-grid.five{grid-template-columns:repeat(2,1fr)}
       .info{grid-template-columns:1fr}
@@ -431,6 +431,10 @@
         หน้า 3 · กระเป๋าผ้า
         <small>สุ่มครั้งละ 1 รายชื่อ</small>
       </button>
+      <button data-page="3">
+        หน้า 4 · น้ำมันมวย
+        <small>สุ่มครั้งละ 3 รายชื่อ</small>
+      </button>
     </div>
 
     <div class="side-actions">
@@ -484,7 +488,8 @@
   const pages = [
     {title:'Set ThaiRung', count:5, label:'PRIZE 01'},
     {title:'หมวก ThaiRung', count:3, label:'PRIZE 02'},
-    {title:'กระเป๋าผ้า', count:1, label:'PRIZE 03'}
+    {title:'กระเป๋าผ้า', count:1, label:'PRIZE 03'},
+    {title:'น้ำมันมวย', count:3, label:'PRIZE 04'}
   ];
 
   let allNames = [];
